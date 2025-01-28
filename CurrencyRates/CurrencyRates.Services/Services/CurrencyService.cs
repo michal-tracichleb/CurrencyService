@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace CurrencyRates.Services.Services
 {
-    internal class CurrencyService : ICurrencyService
+    public class CurrencyService : ICurrencyService
     {
         private readonly ICurrencyRepository _currencyRepository;
 
