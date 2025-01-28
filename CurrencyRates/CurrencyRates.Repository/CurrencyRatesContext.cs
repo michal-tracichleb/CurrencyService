@@ -1,7 +1,6 @@
 ﻿namespace CurrencyRates.Repository
 {
-    public class Class1
+    public class CurrencyRatesContext
     {
-
     }
 }
