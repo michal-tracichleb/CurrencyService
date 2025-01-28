@@ -1,0 +1,28 @@
+﻿@model List<CurrencyRate>
+
+<h2>Currency Rates</h2>
+<form asp-action="FetchRates" method="post">
+    <button type="submit">Pobierz kursy</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Currency</th>
+            <th>Code</th>
+            <th>Rate</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var rate in Model)
+        {
+            <tr>
+                <td>@rate.CurrencyName</td>
+                <td>@rate.Code</td>
+                <td>@rate.Rate</td>
+                <td>@rate.Date.ToShortDateString()</td>
+            </tr>
+        }
+    </tbody>
+</table>
