@@ -1,9 +1,11 @@
-﻿namespace CurrencyRates.Repository
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace CurrencyRates.Repository
 {
     public static class RepositoriesRegistration
     {
-        //public static void AddRepositories(this IServiceCollection services)
-        //{
-        //}
+        public static void AddRepositories(this IServiceCollection services)
+        {
+        }
     }
 }
