@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CurrencyRates.Repository.Interfaces;
+using CurrencyRates.Repository.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CurrencyRates.Repository
 {
@@ -6,6 +8,7 @@ namespace CurrencyRates.Repository
     {
         public static void AddRepositories(this IServiceCollection services)
         {
+            services.AddScoped<ICurrencyRepository, CurrencyRepository>();
         }
     }
 }
