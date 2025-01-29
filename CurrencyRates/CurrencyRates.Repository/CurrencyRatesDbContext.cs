@@ -6,6 +6,7 @@ namespace CurrencyRates.Repository
     public class CurrencyRatesDbContext : DbContext
     {
         public DbSet<CurrencyRate> CurrencyRates { get; set; }
+        public DbSet<DateLog> DateLogs { get; set; }
 
         public CurrencyRatesDbContext(DbContextOptions<CurrencyRatesDbContext> options) : base(options)
         {

@@ -9,6 +9,7 @@ namespace CurrencyRates.Repository
         public static void AddRepositories(this IServiceCollection services)
         {
             services.AddScoped<ICurrencyRepository, CurrencyRepository>();
+            services.AddScoped<IDateLogRepository, DateLogRepository>();
         }
     }
 }
