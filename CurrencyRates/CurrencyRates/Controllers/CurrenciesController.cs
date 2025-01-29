@@ -22,12 +22,5 @@ namespace CurrencyRates.Controllers
 
             return View(currencies.OrderByDescending(c => c.Date).ToList());
         }
-
-        [HttpPost]
-        public async Task<IActionResult> FetchRates()
-        {
-            await _currencyService.FetchAndSaveMissingRatesAsync(DateTime.UtcNow, DateTime.UtcNow);
-            return RedirectToAction("Index");
-        }
     }
 }

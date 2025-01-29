@@ -60,6 +60,7 @@
         <button class="btn btn-outline-primary mb-2" id="toggleCurrencyFilters">Pokaż filtr</button>
 
         <div id="currencyFiltersContainer" class="d-none">
+            <button class="btn btn-outline-danger mb-2" id="toggleAllCurrencies">Odznacz wszystkie</button>
             <div id="currencyFilters" class="d-flex flex-wrap"></div>
         </div>
     </div>
@@ -129,6 +130,7 @@
         const itemsPerPageSelect = document.getElementById("itemsPerPage");
         const toggleButton = document.getElementById("toggleCurrencyFilters");
         const filtersContainer = document.getElementById("currencyFiltersContainer");
+        const toggleAllButton = document.getElementById("toggleAllCurrencies");
 
         let currentPage = 1;
         let itemsPerPage = parseInt(itemsPerPageSelect.value);
@@ -318,6 +320,27 @@
                 toggleButton.textContent = "Pokaż filtr";
             } else {
                 toggleButton.textContent = "Ukryj filtr";
+            }
+        });
+
+        /** Obsługa "Odznacz wszystkie" */
+        function updateToggleAllButtonText() {
+            const allChecked = document.querySelectorAll(".currency-checkbox:checked").length === document.querySelectorAll(".currency-checkbox").length;
+            toggleAllButton.textContent = allChecked ? "Odznacz wszystkie" : "Zaznacz wszystkie";
+        }
+
+        toggleAllButton.addEventListener("click", function () {
+            const shouldCheck = toggleAllButton.textContent === "Zaznacz wszystkie";
+            document.querySelectorAll(".currency-checkbox").forEach(checkbox => {
+                checkbox.checked = shouldCheck;
+            });
+            applyFilters();
+            updateToggleAllButtonText();
+        });
+
+        document.addEventListener("change", function (event) {
+            if (event.target.classList.contains("currency-checkbox")) {
+                updateToggleAllButtonText();
             }
         });
 
