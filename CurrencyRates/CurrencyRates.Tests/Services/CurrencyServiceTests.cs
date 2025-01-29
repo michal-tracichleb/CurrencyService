@@ -131,5 +131,25 @@ namespace CurrencyRates.Tests.Services
             Assert.Single(result);
             Assert.Equal("USD", result.First().Code);
         }
+
+        [Fact]
+        public async Task FetchAndSaveMissingRatesAsync_WhenApiReturnsEmpty_ShouldNotSave()
+        {
+            // Arrange
+            var startDate = DateTime.Today.AddDays(-7);
+            var endDate = DateTime.Today;
+
+            _mockNbpApiService.Setup(api => api.FetchRatesByDateRangeAsync(startDate, endDate))
+                .ReturnsAsync(new List<CurrencyRate>());
+
+            _mockCurrencyRepo.Setup(repo => repo.GetRatesByDateRangeAsync(startDate, endDate))
+                .ReturnsAsync(new List<CurrencyRate>());
+
+            // Act
+            await _currencyService.FetchAndSaveMissingRatesAsync(startDate, endDate);
+
+            // Assert
+            _mockCurrencyRepo.Verify(repo => repo.SaveRatesAsync(It.IsAny<List<CurrencyRate>>()), Times.Never);
+        }
     }
 }
