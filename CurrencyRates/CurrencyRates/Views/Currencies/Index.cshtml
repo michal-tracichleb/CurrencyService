@@ -116,10 +116,19 @@
 
 <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // TableFilters - START //
             const tableFilters = document.querySelectorAll(".form-check-input[id^='table']");
+            const filtersDiv = document.getElementById("currencyFilters");
+            const tableBody = document.getElementById("currencyTableBody");
+            const rows = Array.from(tableBody.querySelectorAll("tr"));
+            const paginationTop = document.getElementById("pagination-top");
+            const paginationBottom = document.getElementById("pagination-bottom");
+            const itemsPerPageSelect = document.getElementById("itemsPerPage");
 
-            function applyTableFilter() {
+            let currentPage = 1;
+            let itemsPerPage = parseInt(itemsPerPageSelect.value);
+
+            /** Pobiera unikalne kody walut z tabeli, uwzględniając wybrane tabele */
+            function getUniqueCurrencies() {
                 const selectedTables = new Set();
                 tableFilters.forEach(filter => {
                     if (filter.checked) {
@@ -127,31 +136,27 @@
                     }
                 });
 
-                document.querySelectorAll("#currencyTableBody tr").forEach(row => {
+                const currencySet = new Set();
+                rows.forEach(row => {
                     const tableType = row.getAttribute("data-table");
-                    row.style.display = selectedTables.has(tableType) ? "" : "none";
+                    const currencyCode = row.getAttribute("data-currency");
+                    if (selectedTables.has(tableType)) {
+                        currencySet.add(currencyCode);
+                    }
                 });
+
+                return Array.from(currencySet);
             }
-            // TableFilters - END //
 
-            // CurrencyFilters - START //
-            const toggleButton = document.getElementById("toggleCurrencyFilters");
-            const filtersContainer = document.getElementById("currencyFiltersContainer");
-            const filtersDiv = document.getElementById("currencyFilters");          
-
-            const currencySet = new Set();
-            document.querySelectorAll("#currencyTableBody tr").forEach(row => {
-                currencySet.add(row.getAttribute("data-currency"));
-            });
-
-            const allCurrencies = Array.from(currencySet);
-
+            /** Generuje dynamicznie listę checkboxów dla walut */
             function renderCurrencyFilters() {
                 filtersDiv.innerHTML = "";
+                const allCurrencies = getUniqueCurrencies();
+                if (allCurrencies.length === 0) return;
 
                 const containerWidth = filtersDiv.clientWidth;
                 const minCheckboxWidth = 90;
-                const itemsPerRow = Math.floor(containerWidth / minCheckboxWidth);
+                const itemsPerRow = Math.floor(containerWidth / minCheckboxWidth) || 5; // Zapobiega dzieleniu przez 0
 
                 let rowDiv = document.createElement("div");
                 rowDiv.classList.add("d-flex", "flex-wrap", "mb-2", "justify-content-evenly");
@@ -168,7 +173,7 @@
                     checkbox.value = currency;
                     checkbox.id = `currency-${currency}`;
                     checkbox.checked = true;
-                    checkbox.classList.add("form-check-input");
+                    checkbox.classList.add("form-check-input", "currency-checkbox");
 
                     const label = document.createElement("label");
                     label.htmlFor = `currency-${currency}`;
@@ -185,43 +190,55 @@
                 });
 
                 filtersDiv.appendChild(rowDiv);
+                setupCurrencyFilterListeners();
             }
 
-            window.addEventListener("resize", renderCurrencyFilters);
+            /** Zastosowanie filtrów dla tabel i walut */
+            function applyFilters() {
+                const selectedTables = new Set();
+                tableFilters.forEach(filter => {
+                    if (filter.checked) {
+                        selectedTables.add(filter.value);
+                    }
+                });
 
-            renderCurrencyFilters();
+                const selectedCurrencies = new Set();
+                document.querySelectorAll(".currency-checkbox").forEach(filter => {
+                    if (filter.checked) {
+                        selectedCurrencies.add(filter.value);
+                    }
+                });
 
-            toggleButton.addEventListener("click", function () {
-                filtersContainer.classList.toggle("d-none");
-            });
-            // CurrencyFilters - END //
+                let visibleRows = [];
+                rows.forEach(row => {
+                    const tableType = row.getAttribute("data-table");
+                    const currencyCode = row.getAttribute("data-currency");
 
+                    const showByTable = selectedTables.has(tableType);
+                    const showByCurrency = selectedCurrencies.has(currencyCode);
 
+                    if (showByTable && showByCurrency) {
+                        row.style.display = "";
+                        visibleRows.push(row);
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
 
+                renderTable(visibleRows);
+            }
 
-            // Obsługa zmiany checkboxów tabel
-            tableFilters.forEach(filter => {
-                filter.addEventListener("change", applyTableFilter);
-            });
+            /** Ustawienie event listenerów dla walut */
+            function setupCurrencyFilterListeners() {
+                document.querySelectorAll(".currency-checkbox").forEach(filter => {
+                    filter.addEventListener("change", applyFilters);
+                });
+            }
 
-            // Wywołanie filtrowania na starcie, aby ukryć niechciane wiersze
-            applyTableFilter();
-
-
-            // Paginacja - START //
-            const itemsPerPageSelect = document.getElementById("itemsPerPage");
-            const tableBody = document.getElementById("currencyTableBody");
-            const rows = Array.from(tableBody.querySelectorAll("tr"));
-            const paginationTop = document.getElementById("pagination-top");
-            const paginationBottom = document.getElementById("pagination-bottom");
-
-            let currentPage = 1;
-            let itemsPerPage = parseInt(itemsPerPageSelect.value);
-
-
-            function renderPagination(paginationElement) {
+            /** Paginacja */
+            function renderPagination(paginationElement, visibleRows) {
                 paginationElement.innerHTML = "";
-                const totalPages = Math.ceil(rows.length / itemsPerPage);
+                const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
                 if (totalPages <= 1) return;
 
                 const createPageItem = (text, targetPage, disabled = false, active = false) => {
@@ -238,7 +255,7 @@
                         a.addEventListener("click", function (event) {
                             event.preventDefault();
                             currentPage = targetPage;
-                            renderTable();
+                            renderTable(visibleRows);
                         });
                     }
 
@@ -246,13 +263,9 @@
                     return li;
                 };
 
-                // Przycisk `<<` (Pierwsza strona)
                 paginationElement.appendChild(createPageItem("<<", 1, currentPage === 1));
-
-                // Przycisk `<` (Poprzednia strona)
                 paginationElement.appendChild(createPageItem("<", Math.max(1, currentPage - 1), currentPage === 1));
 
-                // Generowanie 3 stron
                 let startPage = Math.max(1, currentPage - 1);
                 let endPage = Math.min(totalPages, startPage + 2);
 
@@ -260,31 +273,39 @@
                     paginationElement.appendChild(createPageItem(i, i, false, i === currentPage));
                 }
 
-                // Przycisk `>` (Następna strona)
                 paginationElement.appendChild(createPageItem(">", Math.min(totalPages, currentPage + 1), currentPage === totalPages));
-
-                // Przycisk `>>` (Ostatnia strona)
                 paginationElement.appendChild(createPageItem(">>", totalPages, currentPage === totalPages));
             }
 
-            function renderTable() {
+            /** Renderowanie tabeli po zastosowaniu filtrów */
+            function renderTable(visibleRows) {
                 const start = (currentPage - 1) * itemsPerPage;
                 const end = start + itemsPerPage;
-                rows.forEach((row, index) => {
-                    row.style.display = index >= start && index < end ? "" : "none";
-                });
 
-                renderPagination(paginationTop);
-                renderPagination(paginationBottom);
+                rows.forEach(row => row.style.display = "none"); // Ukrycie wszystkich wierszy
+                visibleRows.slice(start, end).forEach(row => row.style.display = ""); // Pokazanie tylko aktualnych
+
+                renderPagination(paginationTop, visibleRows);
+                renderPagination(paginationBottom, visibleRows);
             }
 
+            /** Obsługa zmiany liczby wyników na stronę */
             itemsPerPageSelect.addEventListener("change", function () {
                 itemsPerPage = parseInt(this.value);
                 currentPage = 1;
-                renderTable();
+                applyFilters();
             });
 
-            renderTable();
-            // Paginacja - END //
+            /** Obsługa filtrowania tabel */
+            tableFilters.forEach(filter => {
+                filter.addEventListener("change", function () {
+                    renderCurrencyFilters();
+                    applyFilters();
+                });
+            });
+
+            /** Inicjalizacja */
+            renderCurrencyFilters();
+            applyFilters();
         });
 </script>
