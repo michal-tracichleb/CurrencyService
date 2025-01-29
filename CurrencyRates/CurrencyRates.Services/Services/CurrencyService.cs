@@ -1,18 +1,20 @@
 ﻿using CurrencyRates.Repository.Interfaces;
 using CurrencyRates.Repository.Models;
-using CurrencyRates.Services.DTO;
 using CurrencyRates.Services.Interfaces;
-using Newtonsoft.Json;
 
 namespace CurrencyRates.Services.Services
 {
     public class CurrencyService : ICurrencyService
     {
         private readonly ICurrencyRepository _currencyRepository;
+        private readonly INbpApiService _nbpApiService;
 
-        public CurrencyService(ICurrencyRepository currencyRepository)
+        public CurrencyService(
+            ICurrencyRepository currencyRepository,
+            INbpApiService nbpApiService)
         {
             _currencyRepository = currencyRepository;
+            _nbpApiService = nbpApiService;
         }
 
         public async Task<List<CurrencyRate>> GetAllCurrenciesAsync()
@@ -27,63 +29,19 @@ namespace CurrencyRates.Services.Services
 
         public async Task FetchAndSaveRatesForLast7DaysAsync(DateTime dateTime)
         {
-            using var httpClient = new HttpClient();
+            var rates = await _nbpApiService.FetchRatesForLast7DaysAsync(dateTime);
+            var existingRates = await _currencyRepository.GetRatesByDateRangeAsync(dateTime.AddDays(-7), dateTime);
 
-            var endDate = dateTime.ToString("yyyy-MM-dd");
-            var startDate = dateTime.AddDays(-7).ToString("yyyy-MM-dd");
+            var newRates = rates
+                .Where(rate => !existingRates.Any(existing =>
+                    existing.Code == rate.Code &&
+                    existing.Date == rate.Date &&
+                    existing.TableType == rate.TableType))
+                .ToList();
 
-            string[] tables = { "A", "B", "C" };
-
-            var allRates = new List<CurrencyRate>();
-            foreach (var table in tables)
+            if (newRates.Any())
             {
-                string apiUrl = $"https://api.nbp.pl/api/exchangerates/tables/{table}/{startDate}/{endDate}/?format=json";
-
-                try
-                {
-                    var response = await httpClient.GetAsync(apiUrl);
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine($"Błąd pobierania danych dla tabeli {table}: {response.StatusCode}");
-                        continue;
-                    }
-
-                    var content = await response.Content.ReadAsStringAsync();
-                    var rateTables = JsonConvert.DeserializeObject<List<NBPTableResponse>>(content);
-
-                    if (rateTables != null)
-                    {
-                        var ratesFromTable = rateTables
-                            .SelectMany(tableData => tableData.Rates.Select(rate => new CurrencyRate
-                            {
-                                CurrencyName = rate.Currency,
-                                Code = rate.Code,
-                                Rate = rate.Mid,
-                                Date = DateTime.Parse(tableData.EffectiveDate),
-                                TableType = table
-                            }))
-                            .ToList();
-
-                        var existingRates = await _currencyRepository.GetRatesByDateRangeAsync(startDate, endDate);
-                        var newRates = ratesFromTable
-                            .Where(rate => !existingRates.Any(existing =>
-                                existing.Code == rate.Code &&
-                                existing.Date == rate.Date &&
-                                existing.TableType == rate.TableType))
-                            .ToList();
-
-                        allRates.AddRange(newRates);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Wystąpił błąd podczas pobierania danych z tabeli {table}: {ex.Message}");
-                }
-            }
-
-            if (allRates.Any())
-            {
-                await _currencyRepository.SaveRatesAsync(allRates);
+                await _currencyRepository.SaveRatesAsync(newRates);
             }
         }
     }

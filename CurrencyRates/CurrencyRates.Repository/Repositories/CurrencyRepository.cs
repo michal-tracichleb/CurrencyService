@@ -31,13 +31,10 @@ namespace CurrencyRates.Repository.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<CurrencyRate>> GetRatesByDateRangeAsync(string startDate, string endDate)
+        public async Task<List<CurrencyRate>> GetRatesByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
-            DateTime start = DateTime.Parse(startDate);
-            DateTime end = DateTime.Parse(endDate);
-
             return await _context.CurrencyRates
-                .Where(r => r.Date >= start && r.Date <= end)
+                .Where(r => r.Date >= startDate && r.Date <= endDate)
                 .ToListAsync();
         }
     }

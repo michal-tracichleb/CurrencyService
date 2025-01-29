@@ -10,6 +10,6 @@ namespace CurrencyRates.Repository.Interfaces
 
         Task SaveRatesAsync(List<CurrencyRate> rates);
 
-        Task<List<CurrencyRate>> GetRatesByDateRangeAsync(string startDate, string endDate);
+        Task<List<CurrencyRate>> GetRatesByDateRangeAsync(DateTime startDate, DateTime endDate);
     }
 }

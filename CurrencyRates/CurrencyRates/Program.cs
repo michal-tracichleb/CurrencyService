@@ -1,5 +1,7 @@
 using CurrencyRates.Repository;
 using CurrencyRates.Services;
+using CurrencyRates.Services.Interfaces;
+using CurrencyRates.Services.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +14,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddRepositories();
 builder.Services.AddServices();
+
+builder.Services.AddHttpClient<INbpApiService, NbpApiService>();
 
 var app = builder.Build();
 
