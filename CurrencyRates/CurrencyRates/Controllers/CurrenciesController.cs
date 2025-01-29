@@ -12,16 +12,21 @@ namespace CurrencyRates.Controllers
             _currencyService = currencyService;
         }
 
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public async Task<IActionResult> Index(DateTime? startDate = null, DateTime? endDate = null)
         {
-            var currencies = await _currencyService.GetAllCurrenciesAsync();
-            return View(currencies);
+            DateTime start = startDate ?? DateTime.Today;
+            DateTime end = endDate ?? DateTime.Today;
+
+            var currencies = await _currencyService.GetCurrenciesByDateRangeAsync(start, end);
+
+            return View(currencies.OrderByDescending(c => c.Date).ToList());
         }
 
         [HttpPost]
         public async Task<IActionResult> FetchRates()
         {
-            await _currencyService.FetchAndSaveRatesForLast7DaysAsync(DateTime.UtcNow);
+            await _currencyService.FetchAndSaveMissingRatesAsync(DateTime.UtcNow, DateTime.UtcNow);
             return RedirectToAction("Index");
         }
     }

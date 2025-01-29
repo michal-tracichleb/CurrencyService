@@ -22,15 +22,10 @@ namespace CurrencyRates.Services.Services
             return await _currencyRepository.GetAllCurrenciesAsync();
         }
 
-        public async Task<List<CurrencyRate>> GetRatesByDateAsync(DateTime date)
+        public async Task FetchAndSaveMissingRatesAsync(DateTime startDate, DateTime endDate)
         {
-            return await _currencyRepository.GetRatesByDateAsync(date);
-        }
-
-        public async Task FetchAndSaveRatesForLast7DaysAsync(DateTime dateTime)
-        {
-            var rates = await _nbpApiService.FetchRatesForLast7DaysAsync(dateTime);
-            var existingRates = await _currencyRepository.GetRatesByDateRangeAsync(dateTime.AddDays(-8), dateTime);
+            var rates = await _nbpApiService.FetchRatesByDateRangeAsync(startDate, endDate);
+            var existingRates = await _currencyRepository.GetRatesByDateRangeAsync(startDate, endDate);
 
             var newRates = rates
                 .Where(rate => !existingRates.Exists(existing =>
@@ -43,6 +38,11 @@ namespace CurrencyRates.Services.Services
             {
                 await _currencyRepository.SaveRatesAsync(newRates);
             }
+        }
+
+        public async Task<List<CurrencyRate>> GetCurrenciesByDateRangeAsync(DateTime start, DateTime end)
+        {
+            return await _currencyRepository.GetRatesByDateRangeAsync(start, end);
         }
     }
 }

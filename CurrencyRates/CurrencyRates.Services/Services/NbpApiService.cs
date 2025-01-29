@@ -19,16 +19,15 @@
             _httpClient = httpClient;
         }
 
-        public async Task<List<CurrencyRate>> FetchRatesForLast7DaysAsync(DateTime referenceDate)
+        public async Task<List<CurrencyRate>> FetchRatesByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
-            var endDate = referenceDate.ToString("yyyy-MM-dd");
-            var startDate = referenceDate.AddDays(-7).ToString("yyyy-MM-dd");
-            string[] tables = { "A", "B", "C" };
+            using var httpClient = new HttpClient();
+            var tables = new[] { "A", "B", "C" };
             var allRates = new List<CurrencyRate>();
 
             foreach (var table in tables)
             {
-                string apiUrl = $"https://api.nbp.pl/api/exchangerates/tables/{table}/{startDate}/{endDate}/?format=json";
+                string apiUrl = $"https://api.nbp.pl/api/exchangerates/tables/{table}/{startDate.ToString("yyyy-MM-dd")}/{endDate.ToString("yyyy-MM-dd")}/?format=json";
 
                 try
                 {
