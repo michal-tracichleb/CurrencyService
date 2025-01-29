@@ -30,10 +30,10 @@ namespace CurrencyRates.Services.Services
         public async Task FetchAndSaveRatesForLast7DaysAsync(DateTime dateTime)
         {
             var rates = await _nbpApiService.FetchRatesForLast7DaysAsync(dateTime);
-            var existingRates = await _currencyRepository.GetRatesByDateRangeAsync(dateTime.AddDays(-7), dateTime);
+            var existingRates = await _currencyRepository.GetRatesByDateRangeAsync(dateTime.AddDays(-8), dateTime);
 
             var newRates = rates
-                .Where(rate => !existingRates.Any(existing =>
+                .Where(rate => !existingRates.Exists(existing =>
                     existing.Code == rate.Code &&
                     existing.Date == rate.Date &&
                     existing.TableType == rate.TableType))
