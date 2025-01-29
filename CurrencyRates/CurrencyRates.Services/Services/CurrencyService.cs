@@ -64,7 +64,15 @@ namespace CurrencyRates.Services.Services
                             }))
                             .ToList();
 
-                        allRates.AddRange(ratesFromTable);
+                        var existingRates = await _currencyRepository.GetRatesByDateRangeAsync(startDate, endDate);
+                        var newRates = ratesFromTable
+                            .Where(rate => !existingRates.Any(existing =>
+                                existing.Code == rate.Code &&
+                                existing.Date == rate.Date &&
+                                existing.TableType == rate.TableType))
+                            .ToList();
+
+                        allRates.AddRange(newRates);
                     }
                 }
                 catch (Exception ex)

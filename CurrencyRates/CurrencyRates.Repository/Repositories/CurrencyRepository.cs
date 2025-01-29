@@ -30,5 +30,15 @@ namespace CurrencyRates.Repository.Repositories
             await _context.CurrencyRates.AddRangeAsync(rates);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<CurrencyRate>> GetRatesByDateRangeAsync(string startDate, string endDate)
+        {
+            DateTime start = DateTime.Parse(startDate);
+            DateTime end = DateTime.Parse(endDate);
+
+            return await _context.CurrencyRates
+                .Where(r => r.Date >= start && r.Date <= end)
+                .ToListAsync();
+        }
     }
 }
