@@ -55,7 +55,7 @@
     <!-- Sekcja wyboru walut (chowana/rozwijana) -->
     <div class="mb-3">
         <label class="fw-bold d-block">💰 Wybierz waluty:</label>
-        <button class="btn btn-outline-primary mb-2" id="toggleCurrencyFilters">Pokaż / Ukryj filtry</button>
+        <button class="btn btn-outline-primary mb-2" id="toggleCurrencyFilters">Pokaż filtr</button>
 
         <div id="currencyFiltersContainer" class="d-none">
             <div id="currencyFilters" class="d-flex flex-wrap"></div>
@@ -123,6 +123,8 @@
             const paginationTop = document.getElementById("pagination-top");
             const paginationBottom = document.getElementById("pagination-bottom");
             const itemsPerPageSelect = document.getElementById("itemsPerPage");
+            const toggleButton = document.getElementById("toggleCurrencyFilters");
+            const filtersContainer = document.getElementById("currencyFiltersContainer");
 
             let currentPage = 1;
             let itemsPerPage = parseInt(itemsPerPageSelect.value);
@@ -156,7 +158,7 @@
 
                 const containerWidth = filtersDiv.clientWidth;
                 const minCheckboxWidth = 90;
-                const itemsPerRow = Math.floor(containerWidth / minCheckboxWidth) || 5; // Zapobiega dzieleniu przez 0
+                const itemsPerRow = Math.floor(containerWidth / minCheckboxWidth) || 5;
 
                 let rowDiv = document.createElement("div");
                 rowDiv.classList.add("d-flex", "flex-wrap", "mb-2", "justify-content-evenly");
@@ -282,8 +284,8 @@
                 const start = (currentPage - 1) * itemsPerPage;
                 const end = start + itemsPerPage;
 
-                rows.forEach(row => row.style.display = "none"); // Ukrycie wszystkich wierszy
-                visibleRows.slice(start, end).forEach(row => row.style.display = ""); // Pokazanie tylko aktualnych
+                rows.forEach(row => row.style.display = "none");
+                visibleRows.slice(start, end).forEach(row => row.style.display = "");
 
                 renderPagination(paginationTop, visibleRows);
                 renderPagination(paginationBottom, visibleRows);
@@ -302,6 +304,17 @@
                     renderCurrencyFilters();
                     applyFilters();
                 });
+            });
+
+            /** Obsługa przycisku "Pokaż / Ukryj filtry" */
+            toggleButton.addEventListener("click", function () {
+                filtersContainer.classList.toggle("d-none");
+
+                if (filtersContainer.classList.contains("d-none")) {
+                    toggleButton.textContent = "Pokaż filtr";
+                } else {
+                    toggleButton.textContent = "Ukryj filtr";
+                }
             });
 
             /** Inicjalizacja */
