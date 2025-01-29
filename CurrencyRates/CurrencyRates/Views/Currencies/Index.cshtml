@@ -58,15 +58,22 @@
         <div id="currencyFilters" class="d-flex flex-wrap"></div>
     </div>
 
-    <!-- Paginacja -->
+    <!-- Paginacja i ilość wyników na stronę -->
     <div class="mb-3">
         <label class="fw-bold">🔢 Liczba wyników na stronę:</label>
         <select id="itemsPerPage" class="form-select w-auto">
-            <option value="10">10</option>
+            <option value="10" selected>10</option>
             <option value="20">20</option>
             <option value="50">50</option>
             <option value="100">100</option>
         </select>
+    </div>
+
+    <!-- Paginacja górna -->
+    <div class="container">
+        <nav>
+            <ul class="pagination justify-content-center" id="pagination-top"></ul>
+        </nav>
     </div>
 
     <!-- Tabela z kursami -->
@@ -96,63 +103,140 @@
         </table>
     </div>
 
-    <!-- Paginacja -->
-    <nav>
-        <ul class="pagination justify-content-center" id="pagination">
-            <!-- Tu zostaną wygenerowane przyciski paginacji -->
-        </ul>
-    </nav>
-</div>
+    <!-- Paginacja dolna -->
+    <div class="container">
+        <nav>
+            <ul class="pagination justify-content-center" id="pagination-bottom"></ul>
+        </nav>
+    </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const startDateInput = document.getElementById("startDate");
-        const endDateInput = document.getElementById("endDate");
-        const dateRangeSelect = document.getElementById("dateRange");
+        document.addEventListener("DOMContentLoaded", function () {
+            const startDateInput = document.getElementById("startDate");
+            const endDateInput = document.getElementById("endDate");
+            const dateRangeSelect = document.getElementById("dateRange");
 
-        // Obsługa wyboru daty
-        dateRangeSelect.addEventListener("change", function () {
-            const value = this.value;
-            if (value === "custom") {
-                startDateInput.removeAttribute("disabled");
-                endDateInput.removeAttribute("disabled");
-            } else {
-                startDateInput.setAttribute("disabled", "disabled");
-                endDateInput.setAttribute("disabled", "disabled");
-            }
+            // Obsługa wyboru daty
+            dateRangeSelect.addEventListener("change", function () {
+                const value = this.value;
+                if (value === "custom") {
+                    startDateInput.removeAttribute("disabled");
+                    endDateInput.removeAttribute("disabled");
+                } else {
+                    startDateInput.setAttribute("disabled", "disabled");
+                    endDateInput.setAttribute("disabled", "disabled");
+                }
+            });
+
+            // Generowanie filtrów walut
+            const currencySet = new Set();
+            document.querySelectorAll("#currencyTableBody tr").forEach(row => {
+                const currencyCode = row.getAttribute("data-currency");
+                if (!currencySet.has(currencyCode)) {
+                    currencySet.add(currencyCode);
+                    const checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.value = currencyCode;
+                    checkbox.id = `currency-${currencyCode}`;
+                    checkbox.checked = true;
+                    checkbox.classList.add("form-check-input");
+
+                    const label = document.createElement("label");
+                    label.htmlFor = `currency-${currencyCode}`;
+                    label.classList.add("form-check-label", "me-3");
+                    label.textContent = currencyCode;
+
+                    const div = document.createElement("div");
+                    div.classList.add("form-check", "form-check-inline");
+                    div.appendChild(checkbox);
+                    div.appendChild(label);
+
+                    document.getElementById("currencyFilters").appendChild(div);
+
+                    // Filtracja kursów po walutach
+                    checkbox.addEventListener("change", function () {
+                        document.querySelectorAll(`#currencyTableBody tr[data-currency='${currencyCode}']`)
+                            .forEach(row => row.style.display = this.checked ? "" : "none");
+                    });
+                }
+            });
         });
 
-        // Generowanie filtrów walut
-        const currencySet = new Set();
-        document.querySelectorAll("#currencyTableBody tr").forEach(row => {
-            const currencyCode = row.getAttribute("data-currency");
-            if (!currencySet.has(currencyCode)) {
-                currencySet.add(currencyCode);
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.value = currencyCode;
-                checkbox.id = `currency-${currencyCode}`;
-                checkbox.checked = true;
-                checkbox.classList.add("form-check-input");
+        document.addEventListener("DOMContentLoaded", function () {
+            const itemsPerPageSelect = document.getElementById("itemsPerPage");
+            const tableBody = document.getElementById("currencyTableBody");
+            const rows = Array.from(tableBody.querySelectorAll("tr"));
+            const paginationTop = document.getElementById("pagination-top");
+            const paginationBottom = document.getElementById("pagination-bottom");
 
-                const label = document.createElement("label");
-                label.htmlFor = `currency-${currencyCode}`;
-                label.classList.add("form-check-label", "me-3");
-                label.textContent = currencyCode;
+            let currentPage = 1;
+            let itemsPerPage = parseInt(itemsPerPageSelect.value);
 
-                const div = document.createElement("div");
-                div.classList.add("form-check", "form-check-inline");
-                div.appendChild(checkbox);
-                div.appendChild(label);
+            function renderPagination(paginationElement) {
+                paginationElement.innerHTML = "";
+                const totalPages = Math.ceil(rows.length / itemsPerPage);
+                if (totalPages <= 1) return;
 
-                document.getElementById("currencyFilters").appendChild(div);
+                const createPageItem = (text, targetPage, disabled = false, active = false) => {
+                    const li = document.createElement("li");
+                    li.classList.add("page-item");
+                    if (disabled) li.classList.add("disabled");
+                    if (active) li.classList.add("active");
 
-                // Filtracja kursów po walutach
-                checkbox.addEventListener("change", function () {
-                    document.querySelectorAll(`#currencyTableBody tr[data-currency='${currencyCode}']`)
-                        .forEach(row => row.style.display = this.checked ? "" : "none");
+                    const a = document.createElement("a");
+                    a.classList.add("page-link");
+                    a.href = "#";
+                    a.textContent = text;
+                    if (!disabled) {
+                        a.addEventListener("click", function (event) {
+                            event.preventDefault();
+                            currentPage = targetPage;
+                            renderTable();
+                        });
+                    }
+
+                    li.appendChild(a);
+                    return li;
+                };
+
+                // Przycisk `<<` (Pierwsza strona)
+                paginationElement.appendChild(createPageItem("<<", 1, currentPage === 1));
+
+                // Przycisk `<` (Poprzednia strona)
+                paginationElement.appendChild(createPageItem("<", Math.max(1, currentPage - 1), currentPage === 1));
+
+                // Generowanie 3 stron do przodu + "..."
+                let startPage = Math.max(1, currentPage - 1);
+                let endPage = Math.min(totalPages, startPage + 2);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    paginationElement.appendChild(createPageItem(i, i, false, i === currentPage));
+                }
+
+                // Przycisk `>` (Następna strona)
+                paginationElement.appendChild(createPageItem(">", Math.min(totalPages, currentPage + 1), currentPage === totalPages));
+
+                // Przycisk `>>` (Ostatnia strona)
+                paginationElement.appendChild(createPageItem(">>", totalPages, currentPage === totalPages));
+            }
+
+            function renderTable() {
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                rows.forEach((row, index) => {
+                    row.style.display = index >= start && index < end ? "" : "none";
                 });
+
+                renderPagination(paginationTop);
+                renderPagination(paginationBottom);
             }
+
+            itemsPerPageSelect.addEventListener("change", function () {
+                itemsPerPage = parseInt(this.value);
+                currentPage = 1;
+                renderTable();
+            });
+
+            renderTable();
         });
-    });
 </script>
