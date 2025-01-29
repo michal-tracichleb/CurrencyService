@@ -116,17 +116,28 @@
 
 <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // TableFilters - START //
+            const tableFilters = document.querySelectorAll(".form-check-input[id^='table']");
+
+            function applyTableFilter() {
+                const selectedTables = new Set();
+                tableFilters.forEach(filter => {
+                    if (filter.checked) {
+                        selectedTables.add(filter.value);
+                    }
+                });
+
+                document.querySelectorAll("#currencyTableBody tr").forEach(row => {
+                    const tableType = row.getAttribute("data-table");
+                    row.style.display = selectedTables.has(tableType) ? "" : "none";
+                });
+            }
+            // TableFilters - END //
+
+            // CurrencyFilters - START //
             const toggleButton = document.getElementById("toggleCurrencyFilters");
             const filtersContainer = document.getElementById("currencyFiltersContainer");
-            const filtersDiv = document.getElementById("currencyFilters");
-            const itemsPerPageSelect = document.getElementById("itemsPerPage");
-            const tableBody = document.getElementById("currencyTableBody");
-            const rows = Array.from(tableBody.querySelectorAll("tr"));
-            const paginationTop = document.getElementById("pagination-top");
-            const paginationBottom = document.getElementById("pagination-bottom");
-
-            let currentPage = 1;
-            let itemsPerPage = parseInt(itemsPerPageSelect.value);
+            const filtersDiv = document.getElementById("currencyFilters");          
 
             const currencySet = new Set();
             document.querySelectorAll("#currencyTableBody tr").forEach(row => {
@@ -183,6 +194,30 @@
             toggleButton.addEventListener("click", function () {
                 filtersContainer.classList.toggle("d-none");
             });
+            // CurrencyFilters - END //
+
+
+
+
+            // Obsługa zmiany checkboxów tabel
+            tableFilters.forEach(filter => {
+                filter.addEventListener("change", applyTableFilter);
+            });
+
+            // Wywołanie filtrowania na starcie, aby ukryć niechciane wiersze
+            applyTableFilter();
+
+
+            // Paginacja - START //
+            const itemsPerPageSelect = document.getElementById("itemsPerPage");
+            const tableBody = document.getElementById("currencyTableBody");
+            const rows = Array.from(tableBody.querySelectorAll("tr"));
+            const paginationTop = document.getElementById("pagination-top");
+            const paginationBottom = document.getElementById("pagination-bottom");
+
+            let currentPage = 1;
+            let itemsPerPage = parseInt(itemsPerPageSelect.value);
+
 
             function renderPagination(paginationElement) {
                 paginationElement.innerHTML = "";
@@ -250,5 +285,6 @@
             });
 
             renderTable();
+            // Paginacja - END //
         });
 </script>
