@@ -7,5 +7,6 @@
         public string Code { get; set; }
         public decimal Rate { get; set; }
         public DateTime Date { get; set; }
+        public string TableType { get; set; }
     }
 }

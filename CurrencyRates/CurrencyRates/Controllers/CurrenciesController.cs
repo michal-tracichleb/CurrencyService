@@ -21,7 +21,7 @@ namespace CurrencyRates.Controllers
         [HttpPost]
         public async Task<IActionResult> FetchRates()
         {
-            await _currencyService.FetchAndSaveRatesAsync();
+            await _currencyService.FetchAndSaveRatesForLast7DaysAsync(DateTime.UtcNow);
             return RedirectToAction("Index");
         }
     }

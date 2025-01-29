@@ -8,6 +8,6 @@ namespace CurrencyRates.Services.Interfaces
 
         Task<List<CurrencyRate>> GetRatesByDateAsync(DateTime date);
 
-        Task FetchAndSaveRatesAsync();
+        Task FetchAndSaveRatesForLast7DaysAsync(DateTime dateTime);
     }
 }
