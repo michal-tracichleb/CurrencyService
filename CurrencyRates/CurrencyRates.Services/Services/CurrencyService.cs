@@ -8,13 +8,16 @@ namespace CurrencyRates.Services.Services
     {
         private readonly ICurrencyRepository _currencyRepository;
         private readonly INbpApiService _nbpApiService;
+        private readonly IDateLogRepository _dateLogRepository;
 
         public CurrencyService(
             ICurrencyRepository currencyRepository,
-            INbpApiService nbpApiService)
+            INbpApiService nbpApiService,
+            IDateLogRepository dateLogRepository)
         {
             _currencyRepository = currencyRepository;
             _nbpApiService = nbpApiService;
+            _dateLogRepository = dateLogRepository;
         }
 
         public async Task<List<CurrencyRate>> GetAllCurrenciesAsync()
@@ -40,9 +43,34 @@ namespace CurrencyRates.Services.Services
             }
         }
 
-        public async Task<List<CurrencyRate>> GetCurrenciesByDateRangeAsync(DateTime start, DateTime end)
+        public async Task<List<CurrencyRate>> GetCurrenciesByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
-            return await _currencyRepository.GetRatesByDateRangeAsync(start, end);
+            var existingDates = await _dateLogRepository.GetLoggedDatesAsync(startDate, endDate);
+
+            var missingDates = Enumerable.Range(0, (endDate - startDate).Days + 1)
+                                         .Select(d => startDate.AddDays(d))
+                                         .Where(date => !existingDates.Contains(date))
+                                         .OrderBy(d => d)
+                                         .ToList();
+
+            while (missingDates.Any())
+            {
+                var batchStart = missingDates.First();
+                var batchEnd = missingDates.Skip(6).FirstOrDefault(batchStart) > endDate
+                    ? endDate
+                    : missingDates.Skip(6).FirstOrDefault(batchStart);
+
+                await FetchAndSaveMissingRatesAsync(batchStart, batchEnd);
+                var fetchedDates = Enumerable.Range(0, (batchEnd - batchStart).Days + 1)
+                                             .Select(d => batchStart.AddDays(d))
+                                             .ToList();
+
+                await _dateLogRepository.SaveLoggedDatesAsync(fetchedDates);
+
+                missingDates.RemoveAll(d => d >= batchStart && d <= batchEnd);
+            }
+
+            return await _currencyRepository.GetRatesByDateRangeAsync(startDate, endDate);
         }
     }
 }

@@ -8,6 +8,6 @@ namespace CurrencyRates.Services.Interfaces
 
         Task FetchAndSaveMissingRatesAsync(DateTime startDate, DateTime endDate);
 
-        Task<List<CurrencyRate>> GetCurrenciesByDateRangeAsync(DateTime start, DateTime end);
+        Task<List<CurrencyRate>> GetCurrenciesByDateRangeAsync(DateTime startDate, DateTime endDate);
     }
 }
