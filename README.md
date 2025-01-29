@@ -71,3 +71,13 @@ Aplikacja składa się z następujących modułów:
    - Otwórz projekt w Visual Studio
    - Ustaw CurrencyRates jako projekt startowy
    - Kliknij Run (F5)
+
+---
+
+## Testowanie
+
+**Uruchomienie testów:**
+- W Visual Studio: Kliknij prawym przyciskiem na projekt CurrencyRates.Tests > Run Tests.
+- Z wiersza poleceń:
+```bash
+dotnet test CurrencyRates.Tests
