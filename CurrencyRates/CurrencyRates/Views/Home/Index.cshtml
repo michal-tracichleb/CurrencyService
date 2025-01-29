@@ -2,7 +2,62 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-5">
+    <div class="text-center">
+        <h1 class="display-4">CurrencyRates - Aplikacja do wyświetlania kursów walut</h1>
+        <p class="lead text-muted">
+            Aplikacja webowa stworzona w technologii ASP.NET Core (MVC), umożliwiająca pobieranie
+            i wyświetlanie kursów walut z API Narodowego Banku Polskiego (NBP).
+            Projekt jest modularny, co ułatwia jego rozwój i testowanie.
+        </p>
+    </div>
+
+    <hr />
+
+    <div class="row mt-4">
+        <!-- Funkcjonalności -->
+        <div class="col-md-6">
+            <h3>🛠 Funkcjonalności</h3>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">📊 Pobieranie kursów walut z API NBP</li>
+                <li class="list-group-item">📅 Wyświetlanie danych w podziale na daty</li>
+                <li class="list-group-item">🔎 Obsługa filtrowania kursów walut</li>
+                <li class="list-group-item">✅ Struktura wspierająca testowanie jednostkowe</li>
+                <li class="list-group-item">🐳 Konteneryzacja przy użyciu Dockera</li>
+            </ul>
+        </div>
+
+        <!-- Technologie -->
+        <div class="col-md-6">
+            <h3>🚀 Technologie i narzędzia</h3>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">🔧 <strong>Backend:</strong> ASP.NET Core MVC 8.0</li>
+                <li class="list-group-item">💾 <strong>Baza danych:</strong> EF Core (InMemory)</li>
+                <li class="list-group-item">🌍 <strong>API:</strong> NBP API (<a href="https://api.nbp.pl" target="_blank">nbp.pl</a>)</li>
+                <li class="list-group-item">🐳 <strong>Konteneryzacja:</strong> Docker (Linux)</li>
+                <li class="list-group-item">🧪 <strong>Testy:</strong> xUnit, Moq</li>
+            </ul>
+        </div>
+    </div>
+
+    <hr />
+
+    <!-- Przycisk do przejścia do kursów walut -->
+    <div class="text-center mt-4">
+        <a class="btn btn-primary btn-lg" asp-controller="Currencies" asp-action="Index">
+            🔍 Przeglądaj kursy walut
+        </a>
+    </div>
+
+    <!-- Wymagania systemowe -->
+    <div class="mt-5">
+        <h3>📌 Wymagania systemowe</h3>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">✅ .NET SDK 8.0</li>
+            <li class="list-group-item">✅ Docker</li>
+            <li class="list-group-item">✅ Visual Studio 2022 (lub nowsze)</li>
+        </ul>
+    </div>
 </div>
+
+

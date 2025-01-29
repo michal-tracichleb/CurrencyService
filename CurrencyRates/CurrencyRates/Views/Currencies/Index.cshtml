@@ -1,6 +1,10 @@
 ﻿@using CurrencyRates.Repository.Models;
 @model List<CurrencyRate>
 
+@{
+    ViewData["Title"] = "Currencies";
+}
+
 <h2>Currency Rates</h2>
 <form asp-action="FetchRates" method="post">
     <button type="submit">Pobierz kursy</button>
