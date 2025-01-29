@@ -1,26 +1,34 @@
 ﻿using CurrencyRates.Repository.Interfaces;
 using CurrencyRates.Repository.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace CurrencyRates.Repository.Repositories
 {
-    internal class CurrencyRepository : ICurrencyRepository
+    public class CurrencyRepository : ICurrencyRepository
     {
-        private readonly List<CurrencyRate> _data = new();
+        private readonly CurrencyRatesDbContext _context;
+
+        public CurrencyRepository(CurrencyRatesDbContext context)
+        {
+            _context = context;
+        }
 
         public async Task<List<CurrencyRate>> GetAllCurrenciesAsync()
         {
-            return await Task.FromResult(_data);
+            return await _context.CurrencyRates.ToListAsync();
         }
 
         public async Task<List<CurrencyRate>> GetRatesByDateAsync(DateTime date)
         {
-            return await Task.FromResult(_data.Where(r => r.Date == date).ToList());
+            return await _context.CurrencyRates
+                .Where(r => r.Date.Date == date.Date)
+                .ToListAsync();
         }
 
         public async Task SaveRatesAsync(List<CurrencyRate> rates)
         {
-            _data.AddRange(rates);
-            await Task.CompletedTask;
+            await _context.CurrencyRates.AddRangeAsync(rates);
+            await _context.SaveChangesAsync();
         }
     }
 }
