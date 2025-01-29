@@ -8,7 +8,9 @@
 <div class="container mt-4">
     <h2 class="text-center">📊 Currency Rates</h2>
 
-    <form asp-action="FetchRates" method="post" class="text-center mb-3">
+    <form id="fetchRatesForm" asp-action="Index" method="get" class="text-center mb-3">
+        <input type="hidden" name="startDate" id="hiddenStartDate" />
+        <input type="hidden" name="endDate" id="hiddenEndDate" />
         <button type="submit" class="btn btn-primary">🔄 Pobierz kursy</button>
     </form>
 
@@ -17,9 +19,9 @@
         <div class="col-md-6">
             <label for="dateRange" class="form-label fw-bold">📅 Wybierz zakres dat</label>
             <select id="dateRange" class="form-select">
-                <option value="year">📆 Ostatni rok</option>
-                <option value="month">📅 Ostatni miesiąc</option>
                 <option value="day">📅 Ostatni dzień</option>
+                <option value="month">📅 Ostatni miesiąc</option>
+                <option value="year">📆 Ostatni rok</option>
                 <option value="custom">📅 Wybierz zakres</option>
             </select>
         </div>
@@ -117,210 +119,302 @@
 </div>
 
 <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const tableFilters = document.querySelectorAll(".form-check-input[id^='table']");
-            const filtersDiv = document.getElementById("currencyFilters");
-            const tableBody = document.getElementById("currencyTableBody");
-            const rows = Array.from(tableBody.querySelectorAll("tr"));
-            const paginationTop = document.getElementById("pagination-top");
-            const paginationBottom = document.getElementById("pagination-bottom");
-            const itemsPerPageSelect = document.getElementById("itemsPerPage");
-            const toggleButton = document.getElementById("toggleCurrencyFilters");
-            const filtersContainer = document.getElementById("currencyFiltersContainer");
+    document.addEventListener("DOMContentLoaded", function () {
+        const tableFilters = document.querySelectorAll(".form-check-input[id^='table']");
+        const filtersDiv = document.getElementById("currencyFilters");
+        const tableBody = document.getElementById("currencyTableBody");
+        const rows = Array.from(tableBody.querySelectorAll("tr"));
+        const paginationTop = document.getElementById("pagination-top");
+        const paginationBottom = document.getElementById("pagination-bottom");
+        const itemsPerPageSelect = document.getElementById("itemsPerPage");
+        const toggleButton = document.getElementById("toggleCurrencyFilters");
+        const filtersContainer = document.getElementById("currencyFiltersContainer");
 
-            let currentPage = 1;
-            let itemsPerPage = parseInt(itemsPerPageSelect.value);
+        let currentPage = 1;
+        let itemsPerPage = parseInt(itemsPerPageSelect.value);
 
-            /** Pobiera unikalne kody walut z tabeli, uwzględniając wybrane tabele */
-            function getUniqueCurrencies() {
-                const selectedTables = new Set();
-                tableFilters.forEach(filter => {
-                    if (filter.checked) {
-                        selectedTables.add(filter.value);
-                    }
-                });
-
-                const currencySet = new Set();
-                rows.forEach(row => {
-                    const tableType = row.getAttribute("data-table");
-                    const currencyCode = row.getAttribute("data-currency");
-                    if (selectedTables.has(tableType)) {
-                        currencySet.add(currencyCode);
-                    }
-                });
-
-                return Array.from(currencySet);
-            }
-
-            /** Generuje dynamicznie listę checkboxów dla walut */
-            function renderCurrencyFilters() {
-                filtersDiv.innerHTML = "";
-                const allCurrencies = getUniqueCurrencies();
-                if (allCurrencies.length === 0) return;
-
-                const containerWidth = filtersDiv.clientWidth;
-                const minCheckboxWidth = 90;
-                const itemsPerRow = Math.floor(containerWidth / minCheckboxWidth) || 5;
-
-                let rowDiv = document.createElement("div");
-                rowDiv.classList.add("d-flex", "flex-wrap", "mb-2", "justify-content-evenly");
-
-                allCurrencies.forEach((currency, index) => {
-                    if (index % itemsPerRow === 0 && index !== 0) {
-                        filtersDiv.appendChild(rowDiv);
-                        rowDiv = document.createElement("div");
-                        rowDiv.classList.add("d-flex", "flex-wrap", "mb-2", "justify-content-evenly");
-                    }
-
-                    const checkbox = document.createElement("input");
-                    checkbox.type = "checkbox";
-                    checkbox.value = currency;
-                    checkbox.id = `currency-${currency}`;
-                    checkbox.checked = true;
-                    checkbox.classList.add("form-check-input", "currency-checkbox");
-
-                    const label = document.createElement("label");
-                    label.htmlFor = `currency-${currency}`;
-                    label.classList.add("form-check-label", "ms-1");
-                    label.textContent = currency;
-
-                    const div = document.createElement("div");
-                    div.classList.add("form-check", "d-flex", "align-items-center");
-                    div.style.width = `${minCheckboxWidth}px`;
-                    div.appendChild(checkbox);
-                    div.appendChild(label);
-
-                    rowDiv.appendChild(div);
-                });
-
-                filtersDiv.appendChild(rowDiv);
-                setupCurrencyFilterListeners();
-            }
-
-            /** Zastosowanie filtrów dla tabel i walut */
-            function applyFilters() {
-                const selectedTables = new Set();
-                tableFilters.forEach(filter => {
-                    if (filter.checked) {
-                        selectedTables.add(filter.value);
-                    }
-                });
-
-                const selectedCurrencies = new Set();
-                document.querySelectorAll(".currency-checkbox").forEach(filter => {
-                    if (filter.checked) {
-                        selectedCurrencies.add(filter.value);
-                    }
-                });
-
-                let visibleRows = [];
-                rows.forEach(row => {
-                    const tableType = row.getAttribute("data-table");
-                    const currencyCode = row.getAttribute("data-currency");
-
-                    const showByTable = selectedTables.has(tableType);
-                    const showByCurrency = selectedCurrencies.has(currencyCode);
-
-                    if (showByTable && showByCurrency) {
-                        row.style.display = "";
-                        visibleRows.push(row);
-                    } else {
-                        row.style.display = "none";
-                    }
-                });
-
-                renderTable(visibleRows);
-            }
-
-            /** Ustawienie event listenerów dla walut */
-            function setupCurrencyFilterListeners() {
-                document.querySelectorAll(".currency-checkbox").forEach(filter => {
-                    filter.addEventListener("change", applyFilters);
-                });
-            }
-
-            /** Paginacja */
-            function renderPagination(paginationElement, visibleRows) {
-                paginationElement.innerHTML = "";
-                const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
-                if (totalPages <= 1) return;
-
-                const createPageItem = (text, targetPage, disabled = false, active = false) => {
-                    const li = document.createElement("li");
-                    li.classList.add("page-item");
-                    if (disabled) li.classList.add("disabled");
-                    if (active) li.classList.add("active");
-
-                    const a = document.createElement("a");
-                    a.classList.add("page-link");
-                    a.href = "#";
-                    a.textContent = text;
-                    if (!disabled) {
-                        a.addEventListener("click", function (event) {
-                            event.preventDefault();
-                            currentPage = targetPage;
-                            renderTable(visibleRows);
-                        });
-                    }
-
-                    li.appendChild(a);
-                    return li;
-                };
-
-                paginationElement.appendChild(createPageItem("<<", 1, currentPage === 1));
-                paginationElement.appendChild(createPageItem("<", Math.max(1, currentPage - 1), currentPage === 1));
-
-                let startPage = Math.max(1, currentPage - 1);
-                let endPage = Math.min(totalPages, startPage + 2);
-
-                for (let i = startPage; i <= endPage; i++) {
-                    paginationElement.appendChild(createPageItem(i, i, false, i === currentPage));
-                }
-
-                paginationElement.appendChild(createPageItem(">", Math.min(totalPages, currentPage + 1), currentPage === totalPages));
-                paginationElement.appendChild(createPageItem(">>", totalPages, currentPage === totalPages));
-            }
-
-            /** Renderowanie tabeli po zastosowaniu filtrów */
-            function renderTable(visibleRows) {
-                const start = (currentPage - 1) * itemsPerPage;
-                const end = start + itemsPerPage;
-
-                rows.forEach(row => row.style.display = "none");
-                visibleRows.slice(start, end).forEach(row => row.style.display = "");
-
-                renderPagination(paginationTop, visibleRows);
-                renderPagination(paginationBottom, visibleRows);
-            }
-
-            /** Obsługa zmiany liczby wyników na stronę */
-            itemsPerPageSelect.addEventListener("change", function () {
-                itemsPerPage = parseInt(this.value);
-                currentPage = 1;
-                applyFilters();
-            });
-
-            /** Obsługa filtrowania tabel */
+        /** Pobiera unikalne kody walut z tabeli, uwzględniając wybrane tabele */
+        function getUniqueCurrencies() {
+            const selectedTables = new Set();
             tableFilters.forEach(filter => {
-                filter.addEventListener("change", function () {
-                    renderCurrencyFilters();
-                    applyFilters();
-                });
-            });
-
-            /** Obsługa przycisku "Pokaż / Ukryj filtry" */
-            toggleButton.addEventListener("click", function () {
-                filtersContainer.classList.toggle("d-none");
-
-                if (filtersContainer.classList.contains("d-none")) {
-                    toggleButton.textContent = "Pokaż filtr";
-                } else {
-                    toggleButton.textContent = "Ukryj filtr";
+                if (filter.checked) {
+                    selectedTables.add(filter.value);
                 }
             });
 
-            /** Inicjalizacja */
-            renderCurrencyFilters();
+            const currencySet = new Set();
+            rows.forEach(row => {
+                const tableType = row.getAttribute("data-table");
+                const currencyCode = row.getAttribute("data-currency");
+                if (selectedTables.has(tableType)) {
+                    currencySet.add(currencyCode);
+                }
+            });
+
+            return Array.from(currencySet);
+        }
+
+        /** Generuje dynamicznie listę checkboxów dla walut */
+        function renderCurrencyFilters() {
+            filtersDiv.innerHTML = "";
+            const allCurrencies = getUniqueCurrencies();
+            if (allCurrencies.length === 0) return;
+
+            const containerWidth = filtersDiv.clientWidth;
+            const minCheckboxWidth = 90;
+            const itemsPerRow = Math.floor(containerWidth / minCheckboxWidth) || 5;
+
+            let rowDiv = document.createElement("div");
+            rowDiv.classList.add("d-flex", "flex-wrap", "mb-2", "justify-content-evenly");
+
+            allCurrencies.forEach((currency, index) => {
+                if (index % itemsPerRow === 0 && index !== 0) {
+                    filtersDiv.appendChild(rowDiv);
+                    rowDiv = document.createElement("div");
+                    rowDiv.classList.add("d-flex", "flex-wrap", "mb-2", "justify-content-evenly");
+                }
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = currency;
+                checkbox.id = `currency-${currency}`;
+                checkbox.checked = true;
+                checkbox.classList.add("form-check-input", "currency-checkbox");
+
+                const label = document.createElement("label");
+                label.htmlFor = `currency-${currency}`;
+                label.classList.add("form-check-label", "ms-1");
+                label.textContent = currency;
+
+                const div = document.createElement("div");
+                div.classList.add("form-check", "d-flex", "align-items-center");
+                div.style.width = `${minCheckboxWidth}px`;
+                div.appendChild(checkbox);
+                div.appendChild(label);
+
+                rowDiv.appendChild(div);
+            });
+
+            filtersDiv.appendChild(rowDiv);
+            setupCurrencyFilterListeners();
+        }
+
+        /** Zastosowanie filtrów dla tabel i walut */
+        function applyFilters() {
+            const selectedTables = new Set();
+            tableFilters.forEach(filter => {
+                if (filter.checked) {
+                    selectedTables.add(filter.value);
+                }
+            });
+
+            const selectedCurrencies = new Set();
+            document.querySelectorAll(".currency-checkbox").forEach(filter => {
+                if (filter.checked) {
+                    selectedCurrencies.add(filter.value);
+                }
+            });
+
+            let visibleRows = [];
+            rows.forEach(row => {
+                const tableType = row.getAttribute("data-table");
+                const currencyCode = row.getAttribute("data-currency");
+
+                const showByTable = selectedTables.has(tableType);
+                const showByCurrency = selectedCurrencies.has(currencyCode);
+
+                if (showByTable && showByCurrency) {
+                    row.style.display = "";
+                    visibleRows.push(row);
+                } else {
+                    row.style.display = "none";
+                }
+            });
+
+            renderTable(visibleRows);
+        }
+
+        /** Ustawienie event listenerów dla walut */
+        function setupCurrencyFilterListeners() {
+            document.querySelectorAll(".currency-checkbox").forEach(filter => {
+                filter.addEventListener("change", applyFilters);
+            });
+        }
+
+        /** Paginacja */
+        function renderPagination(paginationElement, visibleRows) {
+            paginationElement.innerHTML = "";
+            const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
+            if (totalPages <= 1) return;
+
+            const createPageItem = (text, targetPage, disabled = false, active = false) => {
+                const li = document.createElement("li");
+                li.classList.add("page-item");
+                if (disabled) li.classList.add("disabled");
+                if (active) li.classList.add("active");
+
+                const a = document.createElement("a");
+                a.classList.add("page-link");
+                a.href = "#";
+                a.textContent = text;
+                if (!disabled) {
+                    a.addEventListener("click", function (event) {
+                        event.preventDefault();
+                        currentPage = targetPage;
+                        renderTable(visibleRows);
+                    });
+                }
+
+                li.appendChild(a);
+                return li;
+            };
+
+            paginationElement.appendChild(createPageItem("<<", 1, currentPage === 1));
+            paginationElement.appendChild(createPageItem("<", Math.max(1, currentPage - 1), currentPage === 1));
+
+            let startPage = Math.max(1, currentPage - 1);
+            let endPage = Math.min(totalPages, startPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationElement.appendChild(createPageItem(i, i, false, i === currentPage));
+            }
+
+            paginationElement.appendChild(createPageItem(">", Math.min(totalPages, currentPage + 1), currentPage === totalPages));
+            paginationElement.appendChild(createPageItem(">>", totalPages, currentPage === totalPages));
+        }
+
+        /** Renderowanie tabeli po zastosowaniu filtrów */
+        function renderTable(visibleRows) {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+
+            rows.forEach(row => row.style.display = "none");
+            visibleRows.slice(start, end).forEach(row => row.style.display = "");
+
+            renderPagination(paginationTop, visibleRows);
+            renderPagination(paginationBottom, visibleRows);
+        }
+
+        /** Obsługa zmiany liczby wyników na stronę */
+        itemsPerPageSelect.addEventListener("change", function () {
+            itemsPerPage = parseInt(this.value);
+            currentPage = 1;
             applyFilters();
         });
+
+        /** Obsługa filtrowania tabel */
+        tableFilters.forEach(filter => {
+            filter.addEventListener("change", function () {
+                renderCurrencyFilters();
+                applyFilters();
+            });
+        });
+
+        /** Obsługa przycisku "Pokaż / Ukryj filtry" */
+        toggleButton.addEventListener("click", function () {
+            filtersContainer.classList.toggle("d-none");
+
+            if (filtersContainer.classList.contains("d-none")) {
+                toggleButton.textContent = "Pokaż filtr";
+            } else {
+                toggleButton.textContent = "Ukryj filtr";
+            }
+        });
+
+        /** Inicjalizacja */
+        renderCurrencyFilters();
+        applyFilters();
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const fetchRatesForm = document.getElementById("fetchRatesForm");
+        const dateRangeSelect = document.getElementById("dateRange");
+        const startDateInput = document.getElementById("startDate");
+        const endDateInput = document.getElementById("endDate");
+        const hiddenStartDate = document.getElementById("hiddenStartDate");
+        const hiddenEndDate = document.getElementById("hiddenEndDate");
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDateParam = urlParams.get("startDate");
+        const endDateParam = urlParams.get("endDate");
+
+        function determineSelectedOption() {
+            if (!startDateParam || !endDateParam) {
+                dateRangeSelect.value = "day";
+                return;
+            }
+
+            const startDate = new Date(startDateParam);
+            const endDate = new Date(endDateParam);
+            const today = new Date();
+
+            if (startDate.toISOString().split("T")[0] === today.toISOString().split("T")[0] &&
+                endDate.toISOString().split("T")[0] === today.toISOString().split("T")[0]) {
+                dateRangeSelect.value = "day";
+            } else if (
+                startDate.toISOString().split("T")[0] === new Date(today.getFullYear(), today.getMonth() - 1, today.getDate()).toISOString().split("T")[0] &&
+                endDate.toISOString().split("T")[0] === today.toISOString().split("T")[0]
+            ) {
+                dateRangeSelect.value = "month";
+            } else if (
+                startDate.toISOString().split("T")[0] === new Date(today.getFullYear() - 1, today.getMonth(), today.getDate()).toISOString().split("T")[0] &&
+                endDate.toISOString().split("T")[0] === today.toISOString().split("T")[0]
+            ) {
+                dateRangeSelect.value = "year";
+            } else {
+                dateRangeSelect.value = "custom";
+                startDateInput.value = startDateParam;
+                endDateInput.value = endDateParam;
+                startDateInput.removeAttribute("disabled");
+                endDateInput.removeAttribute("disabled");
+            }
+        }
+
+        function updateDateFields() {
+            const today = new Date();
+            let startDate, endDate;
+
+            switch (dateRangeSelect.value) {
+                case "year":
+                    startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+                    endDate = today;
+                    break;
+                case "month":
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+                    endDate = today;
+                    break;
+                case "day":
+                    startDate = today;
+                    endDate = today;
+                    break;
+                case "custom":
+                    startDateInput.removeAttribute("disabled");
+                    endDateInput.removeAttribute("disabled");
+                    return;
+                default:
+                    return;
+            }
+
+            startDateInput.valueAsDate = startDate;
+            endDateInput.valueAsDate = endDate;
+            startDateInput.setAttribute("disabled", "disabled");
+            endDateInput.setAttribute("disabled", "disabled");
+
+            hiddenStartDate.value = startDate.toISOString().split("T")[0];
+            hiddenEndDate.value = endDate.toISOString().split("T")[0];
+        }
+
+        dateRangeSelect.addEventListener("change", updateDateFields);
+
+        fetchRatesForm.addEventListener("submit", function () {
+            if (dateRangeSelect.value === "custom") {
+                hiddenStartDate.value = startDateInput.value;
+                hiddenEndDate.value = endDateInput.value;
+            }
+        });
+
+        determineSelectedOption();
+        updateDateFields();
+    });
+
 </script>

@@ -55,7 +55,7 @@ namespace CurrencyRates.Services.Services
 
             while (missingDates.Any())
             {
-                var batchStart = missingDates.First();
+                var batchStart = missingDates[0];
                 var batchEnd = missingDates.Skip(6).FirstOrDefault(batchStart) > endDate
                     ? endDate
                     : missingDates.Skip(6).FirstOrDefault(batchStart);
