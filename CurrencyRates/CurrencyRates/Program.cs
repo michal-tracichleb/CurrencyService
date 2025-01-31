@@ -2,12 +2,17 @@ using CurrencyRates.Repository;
 using CurrencyRates.Services;
 using CurrencyRates.Services.Interfaces;
 using CurrencyRates.Services.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<CurrencyRatesDbContext>(options =>
     options.UseInMemoryDatabase("CurrencyRatesDb"));
+
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<CurrencyRatesDbContext>()
+    .AddDefaultTokenProviders();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
