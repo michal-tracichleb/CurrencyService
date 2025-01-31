@@ -1,8 +1,10 @@
 ﻿using CurrencyRates.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CurrencyRates.Controllers
 {
+    [Authorize]
     public class CurrenciesController : Controller
     {
         private readonly ICurrencyService _currencyService;
