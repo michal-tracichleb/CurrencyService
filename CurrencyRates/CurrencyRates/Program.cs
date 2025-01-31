@@ -1,4 +1,5 @@
 using CurrencyRates.Repository;
+using CurrencyRates.Repository.Seeder;
 using CurrencyRates.Services;
 using CurrencyRates.Services.Interfaces;
 using CurrencyRates.Services.Services;
@@ -36,6 +37,19 @@ builder.Services.AddServices();
 builder.Services.AddHttpClient<INbpApiService, NbpApiService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        Seeder.SeedData(services).Wait();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"B³¹d podczas inicjalizacji danych: {ex.Message}");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
