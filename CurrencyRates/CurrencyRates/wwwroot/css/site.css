@@ -20,3 +20,71 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* Dodatkowe regu³y dla ciemnego motywu */
+html.dark, html.dark body {
+    background-color: #1e1e1e;
+    color: #f8f9fa;
+}
+
+.dark a {
+    color: #9ecffb;
+}
+
+.dark .navbar {
+    background-color: #343a40;
+    border-bottom: 1px solid #444;
+}
+
+.dark .card {
+    color: #f8f9fa;
+    border: 1px solid #444;
+}
+
+.dark .btn:focus,
+.dark .btn:active:focus,
+.dark .form-control:focus,
+.dark .form-check-input:focus {
+    box-shadow: 0 0 0 0.15rem #888, 0 0 0 0.25rem #258cfb;
+}
+
+.dark footer.footer {
+    color: #cfcfcf;
+}
+
+.dark .bg-white {
+    color: #f8f9fa;
+}
+
+.dark .navbar-light {
+    background-color: #343a40;
+    color: #f8f9fa;
+}
+
+.dark .table {
+    color: #f8f9fa;
+}
+
+    .dark .table td,
+    .dark .table th {
+        border-color: #444;
+    }
+
+.dark ul,
+.dark ol {
+    color: #f8f9fa;
+}
+
+    .dark ul li,
+    .dark ol li {
+        background-color: transparent;
+        color: #f8f9fa;
+    }
+
+.dark .card ul li {
+    color: #f8f9fa;
+}
+
+.dark .card-body {
+    background-color: #2b2b2b;
+}

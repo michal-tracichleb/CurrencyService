@@ -1,5 +1,9 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@{
+    var theme = Context.Session.GetString("Theme") ?? "light";
+}
+
+<!DOCTYPE html>
+<html lang="pl" class="@theme">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -29,7 +33,15 @@
                         </li>
                     </ul>
 
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item">
+                            <form asp-action="SetTheme" asp-controller="Home" method="post" class="d-inline">
+                                <select name="theme" class="form-select form-select-sm w-auto d-inline-block me-2" onchange="this.form.submit()">
+                                    <option value="light" selected="@(theme == "light")">Light</option>
+                                    <option value="dark" selected="@(theme == "dark")">Dark</option>
+                                </select>
+                            </form>
+                        </li>
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
