@@ -1,18 +1,40 @@
 ﻿@using CurrencyRates.Models.Account
-
 @model LoginViewModel
-<form asp-action="Login" method="post">
-    <div>
-        <label asp-for="Email"></label>
-        <input asp-for="Email" />
+
+<div class="container mt-4" style="max-width: 500px;">
+    <h2 class="text-center mb-4">Zaloguj się</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Login" method="post" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" type="password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="form-check mb-3">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label"></label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    Zaloguj
+                </button>
+            </form>
+        </div>
     </div>
-    <div>
-        <label asp-for="Password"></label>
-        <input asp-for="Password" />
+
+    <div class="text-center mt-3">
+        <span>Nie masz konta?</span>
+        <a asp-action="Register" asp-controller="Account" class="text-decoration-none">
+            Zarejestruj się
+        </a>
     </div>
-    <div>
-        <label asp-for="RememberMe"></label>
-        <input asp-for="RememberMe" />
-    </div>
-    <button type="submit">Zaloguj</button>
-</form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
