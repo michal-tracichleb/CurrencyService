@@ -1,5 +1,5 @@
-﻿@using CurrencyRates.Repository.Models;
-@model List<CurrencyRate>
+﻿@using CurrencyRates.Models.Currencies;
+@model CurrenciesViewModel;
 
 @{
     ViewData["Title"] = "Currencies";
@@ -31,11 +31,19 @@
         </div>
     </div>
 
-    <form id="fetchRatesForm" asp-action="Index" method="get" class="text-center mb-3">
-        <input type="hidden" name="startDate" id="hiddenStartDate" />
-        <input type="hidden" name="endDate" id="hiddenEndDate" />
-        <button type="submit" class="btn btn-primary">🔄 Pobierz kursy</button>
-    </form>
+    <div class="text-center mb-3">
+        <form id="fetchRatesForm" asp-action="Index" method="get" class="d-inline-block me-2">
+            <input type="hidden" name="startDate" id="hiddenStartDate" />
+            <input type="hidden" name="endDate" id="hiddenEndDate" />
+            <button type="submit" class="btn btn-primary">🔄 Pobierz kursy</button>
+        </form>
+
+        <form asp-action="DownloadCsv" asp-controller="Currencies" method="get" class="d-inline-block">
+            <input type="hidden" name="startDate" value="@Model.StartDate" />
+            <input type="hidden" name="endDate" value="@Model.EndDate" />
+            <button type="submit" class="btn btn-success">💾 Pobierz CSV</button>
+        </form>
+    </div>
 
     <!-- Checkboxy dla tabel -->
     <div class="mb-3">
@@ -96,7 +104,7 @@
                 </tr>
             </thead>
             <tbody id="currencyTableBody">
-                @foreach (var rate in Model)
+                @foreach (var rate in Model.Items)
                 {
                     <tr data-currency="@rate.Code" data-table="@rate.TableType">
                         <td>@rate.CurrencyName</td>
